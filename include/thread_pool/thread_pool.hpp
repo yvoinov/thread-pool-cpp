@@ -13,18 +13,17 @@
 #include <utility>
 #include <chrono>
 
+#include <iostream>	/* For std::cerr */
+
 #if defined __sun__
-#include <cstdio>		/* For std::fprintf */
 #include <vector>
 #include <sys/types.h>
 #include <sys/processor.h>
 #include <sys/procset.h>
 #include <unistd.h>		/* For sysconf */
 #elif defined __linux__
-#include <cstdio>		/* For std::fprintf */
 #include <sched.h>
 #elif defined __FreeBSD__
-#include <cstdio>		/* For std::fprintf */
 #include <pthread_np.h>
 #endif
 
@@ -156,7 +155,7 @@ inline ThreadPoolImpl<Task, Queue>::ThreadPoolImpl(
             #elif defined __sun__
             if (processor_bind(P_LWPID, P_MYID, v_cpu_id[v_cpu], NULL) != 0)
             #endif
-                std::fprintf(stderr, "Error setting thread affinity\n");
+                std::cerr << "Error setting thread affinity" << std::endl;
             ++v_cpu;
         }
 	#endif
