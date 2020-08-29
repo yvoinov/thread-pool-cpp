@@ -11,7 +11,7 @@ namespace tp
 {
 
 #if defined IDLE_CNT
-static std::atomic<std::size_t> m_idle_cnt {};
+static std::atomic<std::size_t> m_idle_cnt { 0 };
 #endif
 
 /**
