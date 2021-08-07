@@ -1,6 +1,6 @@
 thread-pool-cpp
 =================
-[![Build Status](https://travis-ci.org/yvoinov/thread-pool-cpp.svg?branch=master)](https://travis-ci.org/yvoinov/thread-pool-cpp)
+[![Build Status](https://travis-ci.com/yvoinov/thread-pool-cpp.svg?branch=master)](https://travis-ci.com/yvoinov/thread-pool-cpp)
 [![Codecov branch](https://img.shields.io/codecov/c/github/yvoinov/thread-pool-cpp/master.svg)](https://codecov.io/gh/yvoinov/thread-pool-cpp)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
