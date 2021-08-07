@@ -18,8 +18,8 @@ on:
     # The branches below must be a subset of the branches above
     branches: [ main ]
 ## Do not run periodically
-##  schedule:
-##    - cron: '28 12 * * 5'
+ schedule:
+    - cron: '34 3 * * 1'
 
 jobs:
   analyze:
