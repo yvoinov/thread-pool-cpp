@@ -1,11 +1,11 @@
 #pragma once
 
 #define DELEGATE_ARGS_SIZE 128
-#include <delegate.hpp>		/* Fixed function incompatible with SUNPRO */
+#include "delegate.hpp"		/* Fixed function incompatible with SUNPRO */
 
-#include <mpmc_bounded_queue.hpp>
-#include <thread_pool_options.hpp>
-#include <worker.hpp>
+#include "mpmc_bounded_queue.hpp"
+#include "thread_pool_options.hpp"
+#include "worker.hpp"
 
 #include <stdexcept>
 #include <atomic>
@@ -204,8 +204,10 @@ inline void ThreadPoolImpl<Task, Queue>::post(Handler&& handler) noexcept
 {
     for (;;)	/* We're assumes external producer can wait or have some kind of queue */
     {
-        for (const auto& m : m_workers)/* First try post current queue; if overflow, try post other queues before wait */
+        for (const auto& m : m_workers) {/* First try post current queue; if overflow, try post other queues before wait */
+            static_cast<void>(m);/* Suppress warning: unused variable 'm' [-Wunused-variable] */
             if (tryPost(std::forward<Handler>(handler))) return;
+	}
         std::unique_lock<std::mutex> lock(m_conditional_mutex);
         m_conditional_lock.wait_for(lock, std::chrono::microseconds(1), [] { return false; });
     }
