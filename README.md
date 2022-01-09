@@ -1,6 +1,5 @@
 thread-pool-cpp
 =================
-[![CodeQL](https://github.com/yvoinov/thread-pool-cpp/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/yvoinov/thread-pool-cpp/actions/workflows/codeql-analysis.yml)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
  * It is highly scalable and fast.
