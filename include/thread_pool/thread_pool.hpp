@@ -15,22 +15,22 @@
 
 #include <iostream>	/* For std::cerr */
 
-#if defined __sun__
+#if defined(__sun__)
 #include <vector>
 #include <sys/types.h>
 #include <sys/processor.h>
 #include <sys/procset.h>
 #include <unistd.h>		/* For sysconf */
-#elif defined __linux__
+#elif defined(__linux__)
 #include <sched.h>
-#elif defined __FreeBSD__
+#elif defined(__FreeBSD__)
 #include <pthread_np.h>
 #endif
 
 namespace tp
 {
 
-#if defined __sun__ || defined __linux__ || defined __FreeBSD__
+#if defined(__sun__) || defined(__linux__) || defined(__FreeBSD__)
 static bool v_affinity = false;	/* Default: disabled */
 #endif
 
@@ -117,7 +117,7 @@ inline ThreadPoolImpl<Task, Queue>::ThreadPoolImpl(
         worker_ptr.reset(new Worker<Task, Queue>(options.queueSize()));
     }
 
-    #if defined __sun__
+    #if defined(__sun__)
     std::vector<processorid_t> v_cpu_id;	/* Struct for CPU/core ID */
     if (v_affinity)
     {
@@ -128,31 +128,31 @@ inline ThreadPoolImpl<Task, Queue>::ThreadPoolImpl(
         }
     }
     #endif
-    #if defined __sun__ || defined __linux__ || defined __FreeBSD__
+    #if defined(__sun__) || defined(__linux__) || defined(__FreeBSD__)
     std::size_t v_cpu = 0;
     #endif
 
     for (const auto& m : m_workers)
     {
-	#if defined __sun__ || defined __linux__ || defined __FreeBSD__
+	#if defined(__sun__) || defined(__linux__) || defined(__FreeBSD__)
         if (v_affinity) {
             if (v_cpu > std::thread::hardware_concurrency() - 1)
                 v_cpu = 0;
-            #if defined __linux__
+            #if defined(__linux__)
             cpu_set_t mask;
-            #elif defined __FreeBSD__
+            #elif defined(__FreeBSD__)
             cpuset_t mask;
             #endif
-            #if defined __linux__ || defined __FreeBSD__
+            #if defined(__linux__) || defined(__FreeBSD__)
             CPU_ZERO(&mask);
             CPU_SET(v_cpu, &mask);
             pthread_t v_thread = pthread_self();
             #endif
-            #if defined __linux__
+            #if defined(__linux__)
             if (pthread_setaffinity_np(v_thread, sizeof(cpu_set_t), &mask) != 0)
-            #elif defined __FreeBSD__
+            #elif defined(__FreeBSD__)
             if (pthread_setaffinity_np(v_thread, sizeof(cpuset_t), &mask) != 0)
-            #elif defined __sun__
+            #elif defined(__sun__)
             if (processor_bind(P_LWPID, P_MYID, v_cpu_id[v_cpu], NULL) != 0)
             #endif
                 std::cerr << "Error setting thread affinity" << std::endl;
