@@ -6,9 +6,6 @@
 #include <condition_variable>
 #include <mutex>
 #include <limits>
-#if __cplusplus >= 201402L
-#include <utility>
-#endif
 
 namespace tp
 {
@@ -106,11 +103,7 @@ private:
 
     Queue<Task> m_queue;
     std::atomic<bool> m_running_flag { false };
-    #if __cplusplus >= 201402L
-    bool m_ready { false };
-    #elif __cplusplus >= 201103L
     std::atomic<bool> m_ready { false };
-    #endif
     std::thread m_thread;
     std::size_t m_next_donor;
     std::mutex m_conditional_mutex;
@@ -139,15 +132,8 @@ inline Worker<Task, Queue>::Worker(std::size_t queue_size)
 template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
-    m_running_flag.store(false, std::memory_order_relaxed);
-    {
-        std::lock_guard<std::mutex> lock(m_conditional_mutex);
-        #if __cplusplus >= 201402L
-        m_ready = true;
-        #elif __cplusplus >= 201103L
-        m_ready.store(true, std::memory_order_relaxed);
-        #endif
-    }
+    m_running_flag.store(false, std::memory_order_release);
+    m_ready.store(true, std::memory_order_release);
     m_conditional_lock.notify_one();
     m_thread.join();
 }
@@ -168,14 +154,7 @@ template <typename Task, template<typename> class Queue>
 template <typename Handler>
 inline bool Worker<Task, Queue>::tryPost(Handler&& handler)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_conditional_mutex);
-        #if __cplusplus >= 201402L
-        m_ready = true;
-        #elif __cplusplus >= 201103L
-        m_ready.store(true, std::memory_order_relaxed);
-        #endif
-    }
+    m_ready.store(true, std::memory_order_release);
     m_conditional_lock.notify_one();
     return m_queue.push(std::forward<Handler>(handler));
 }
@@ -230,19 +209,11 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
         else
         {
             std::unique_lock<std::mutex> lock(m_conditional_mutex);
-            #if __cplusplus >= 201402L
-            if (std::exchange(m_ready, false)) continue;
-            #elif __cplusplus >= 201103L
             if (m_ready.exchange(false, std::memory_order_relaxed)) continue;// If post() occurs here, don't sleep
-            #endif
             #if defined IDLE_CNT
             m_idle_cnt.fetch_add(1, std::memory_order_relaxed);
             #endif
-            #if __cplusplus >= 201402L
-            m_conditional_lock.wait(lock, [this] { return std::exchange(m_ready, false); });
-            #elif __cplusplus >= 201103L
-            m_conditional_lock.wait(lock, [this] { return m_ready.exchange(false, std::memory_order_relaxed); });
-            #endif
+            m_conditional_lock.wait(lock, [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
             #if defined IDLE_CNT
             m_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
             #endif
