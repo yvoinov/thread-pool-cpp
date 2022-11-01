@@ -209,7 +209,7 @@ inline void ThreadPoolImpl<Task, Queue>::post(Handler&& handler) noexcept
             if (tryPost(std::forward<Handler>(handler))) return;
 	}
         std::unique_lock<std::mutex> lock(m_conditional_mutex);
-        m_conditional_lock.wait_for(lock, std::chrono::microseconds(1), [] { return false; });
+        m_conditional_lock.wait_for(lock, std::chrono::microseconds(1), []() { return false; });
     }
 }
 
