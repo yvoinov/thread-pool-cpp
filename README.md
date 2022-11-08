@@ -7,10 +7,6 @@ thread-pool-cpp
  * No external dependencies, only standard library needed.
  * It implements both work-stealing and work-distribution balancing startegies.
  * It implements cooperative scheduling strategy.
- * Workers affinity.
- * Idle workers sleep.
- * Job-stealing feature.
- * Queue overflow round-robin protection.
 
 Example run:
 Post job to thread pool is much faster than for boost::asio based thread pool.
