@@ -7,8 +7,6 @@
 #include "thread_pool_options.hpp"
 #include "worker.hpp"
 
-#include <stdexcept>
-#include <atomic>
 #include <memory>
 #include <utility>
 #include <chrono>
@@ -99,9 +97,6 @@ private:
     Worker<Task, Queue>& getWorker();
     WorkerVector m_workers;
     std::atomic<std::size_t> m_next_worker;
-
-    std::mutex m_conditional_mutex;
-    std::condition_variable m_conditional_lock;
 };
 
 /// Implementation
@@ -135,7 +130,8 @@ inline ThreadPoolImpl<Task, Queue>::ThreadPoolImpl(
     for (const auto& m : m_workers)
     {
 	#if defined(__sun__) || defined(__linux__) || defined(__FreeBSD__)
-        if (v_affinity) {
+        if (v_affinity)
+        {
             if (v_cpu > std::thread::hardware_concurrency() - 1)
                 v_cpu = 0;
             #if defined(__linux__)
@@ -204,12 +200,14 @@ inline void ThreadPoolImpl<Task, Queue>::post(Handler&& handler) noexcept
 {
     for (;;)	/* We're assumes external producer can wait or have some kind of queue */
     {
-        for (const auto& m : m_workers) {/* First try post current queue; if overflow, try post other queues before wait */
+        for (const auto& m : m_workers)
+        {/* First try post current queue; if overflow, try post other queues before wait */
             static_cast<void>(m);/* Suppress warning: unused variable 'm' [-Wunused-variable] */
             if (tryPost(std::forward<Handler>(handler))) return;
 	}
-        std::unique_lock<std::mutex> lock(m_conditional_mutex);
-        m_conditional_lock.wait_for(lock, std::chrono::microseconds(1), []() { return false; });
+        std::unique_lock<std::mutex> lock(m_conditional_mutex_post);
+        m_fill_up.store(true, std::memory_order_relaxed);
+        m_conditional_lock_post.wait_for(lock, std::chrono::microseconds(1), []() { return m_fill.exchange(false, std::memory_order_relaxed); });
     }
 }
 

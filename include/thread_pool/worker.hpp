@@ -13,6 +13,10 @@ namespace tp
 #if defined IDLE_CNT
 static std::atomic<std::size_t> m_idle_cnt { 0 };
 #endif
+static std::atomic<bool> m_fill { false },
+                         m_fill_up { false };
+static std::condition_variable m_conditional_lock_post;
+static std::mutex m_conditional_mutex_post;
 
 /**
  * @brief The Worker class owns task queue and executing thread.
@@ -102,8 +106,8 @@ private:
     void threadFunc(WorkerVector& workers) noexcept;
 
     Queue<Task> m_queue;
-    std::atomic<bool> m_running_flag { false };
-    std::atomic<bool> m_ready { false };
+    std::atomic<bool> m_running_flag { false },
+                      m_ready { false };
     std::thread m_thread;
     std::size_t m_next_donor;
     std::mutex m_conditional_mutex;
@@ -204,6 +208,10 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             catch(...)
             {
                 // Suppress all exceptions.
+            }
+            if (m_fill_up.load(std::memory_order_acquire)) {
+                m_fill.store(true, std::memory_order_release);
+                m_conditional_lock_post.notify_one();
             }
         }
         else
