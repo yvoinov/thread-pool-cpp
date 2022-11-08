@@ -7,8 +7,8 @@ thread-pool-cpp
  * No external dependencies, only standard library needed.
  * It implements both work-stealing and work-distribution balancing startegies.
  * It implements cooperative scheduling strategy.
- * Worker affinity.
- * Idle worker sleep.
+ * Workers affinity.
+ * Idle workers sleep.
  * Job-stealing feature.
  * Queue overflow round-robin protection.
 
@@ -39,3 +39,4 @@ Additions
 3. Round Robin Queue Servicing from https://github.com/inkooboo/thread-pool-cpp/pull/24 are implemented.
 4. Oracle Developer Studio support
 5. Sleep counter added.
+6. Queue overflow round-robin improved protection.
