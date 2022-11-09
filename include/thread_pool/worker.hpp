@@ -209,7 +209,7 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             {
                 // Suppress all exceptions.
             }
-            if (m_fill_up.load(std::memory_order_acquire))
+            if (m_fill_up.exchange(false, std::memory_order_acquire))
             {
                 m_fill.store(true, std::memory_order_release);
                 m_conditional_lock_post.notify_one();
