@@ -205,9 +205,9 @@ inline void ThreadPoolImpl<Task, Queue>::post(Handler&& handler) noexcept
             static_cast<void>(m);/* Suppress warning: unused variable 'm' [-Wunused-variable] */
             if (tryPost(std::forward<Handler>(handler))) return;
 	}
-        std::unique_lock<std::mutex> lock(m_conditional_mutex_post);
-        m_fill_up.store(true, std::memory_order_relaxed);
-        m_conditional_lock_post.wait_for(lock, std::chrono::microseconds(1), []() { return m_fill.exchange(false, std::memory_order_relaxed); });
+        std::unique_lock<std::mutex> lock(v_conditional_mutex_post);
+        v_fill_up.store(true, std::memory_order_relaxed);
+        v_conditional_lock_post.wait_for(lock, std::chrono::microseconds(1), []() { return v_fill.exchange(false, std::memory_order_relaxed); });
     }
 }
 

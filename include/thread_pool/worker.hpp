@@ -11,12 +11,12 @@ namespace tp
 {
 
 #if defined IDLE_CNT
-static std::atomic<std::size_t> m_idle_cnt { 0 };
+static std::atomic<std::size_t> v_idle_cnt { 0 };
 #endif
-static std::atomic<bool> m_fill { false },
-                         m_fill_up { false };
-static std::condition_variable m_conditional_lock_post;
-static std::mutex m_conditional_mutex_post;
+static std::atomic<bool> v_fill { false },
+                         v_fill_up { false };
+static std::condition_variable v_conditional_lock_post;
+static std::mutex v_conditional_mutex_post;
 
 /**
  * @brief The Worker class owns task queue and executing thread.
@@ -209,10 +209,10 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             {
                 // Suppress all exceptions.
             }
-            if (m_fill_up.exchange(false, std::memory_order_acquire))
+            if (v_fill_up.exchange(false, std::memory_order_acquire))
             {
-                m_fill.store(true, std::memory_order_release);
-                m_conditional_lock_post.notify_one();
+                v_fill.store(true, std::memory_order_release);
+                v_conditional_lock_post.notify_one();
             }
         }
         else
@@ -220,11 +220,11 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             std::unique_lock<std::mutex> lock(m_conditional_mutex);
             if (m_ready.exchange(false, std::memory_order_relaxed)) continue;// If post() occurs here, don't sleep
             #if defined IDLE_CNT
-            m_idle_cnt.fetch_add(1, std::memory_order_relaxed);
+            v_idle_cnt.fetch_add(1, std::memory_order_relaxed);
             #endif
             m_conditional_lock.wait(lock, [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
             #if defined IDLE_CNT
-            m_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
+            v_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
             #endif
         }
     }
