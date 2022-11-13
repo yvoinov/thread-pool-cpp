@@ -13,10 +13,6 @@ namespace tp
 #if defined IDLE_CNT
 static std::atomic<std::size_t> v_idle_cnt { 0 };
 #endif
-static std::atomic<bool> v_fill { false },
-                         v_fill_up { false };
-static std::condition_variable v_conditional_lock_post;
-static std::mutex v_conditional_mutex_post;
 
 /**
  * @brief The Worker class owns task queue and executing thread.
@@ -84,6 +80,10 @@ public:
      */
     static std::size_t getWorkerIdForCurrentThread();
 
+    static std::atomic<bool> m_fill, m_fill_up;
+    static std::condition_variable m_conditional_lock_post;
+    static std::mutex m_conditional_mutex_post;
+
 private:
     /**
      * @brief tryGetLocalTask Get one task from this worker queue.
@@ -106,13 +106,25 @@ private:
     void threadFunc(WorkerVector& workers) noexcept;
 
     Queue<Task> m_queue;
-    std::atomic<bool> m_running_flag { false },
-                      m_ready { false };
+    std::atomic<bool> m_running_flag, m_ready;
     std::thread m_thread;
     std::size_t m_next_donor;
     std::mutex m_conditional_mutex;
     std::condition_variable m_conditional_lock;
 };
+
+/* Avoid linking error 'Undefined first referenced symbol' */
+template <typename Task, template<typename> class Queue>
+std::atomic<bool> Worker<Task, Queue>::m_fill { false };
+
+template <typename Task, template<typename> class Queue>
+std::atomic<bool> Worker<Task, Queue>::m_fill_up { false };
+
+template <typename Task, template<typename> class Queue>
+std::condition_variable Worker<Task, Queue>::m_conditional_lock_post;
+
+template <typename Task, template<typename> class Queue>
+std::mutex Worker<Task, Queue>::m_conditional_mutex_post;
 
 /// Implementation
 
@@ -129,6 +141,7 @@ template <typename Task, template<typename> class Queue>
 inline Worker<Task, Queue>::Worker(std::size_t queue_size)
     : m_queue(queue_size)
     , m_running_flag(true)
+    , m_ready(false)
     , m_next_donor(0) // Initialized in threadFunc.
 {
 }
@@ -209,10 +222,10 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             {
                 // Suppress all exceptions.
             }
-            if (v_fill_up.exchange(false, std::memory_order_acquire))
+            if (m_fill_up.exchange(false, std::memory_order_acquire))
             {
-                v_fill.store(true, std::memory_order_release);
-                v_conditional_lock_post.notify_one();
+                m_fill.store(true, std::memory_order_release);
+                m_conditional_lock_post.notify_one();
             }
         }
         else
