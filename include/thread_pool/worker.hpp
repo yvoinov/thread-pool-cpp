@@ -151,7 +151,7 @@ inline void Worker<Task, Queue>::stop()
 {
     m_running_flag.store(false, std::memory_order_release);
     m_ready.store(true, std::memory_order_release);
-    m_conditional_lock.notify_one();
+    m_conditional_lock.notify_all();
     m_thread.join();
 }
 
