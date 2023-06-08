@@ -171,7 +171,6 @@ inline ThreadPoolImpl<Task, Queue>::~ThreadPoolImpl()
 {
     for (auto& worker_ptr : m_workers)
     {
-        worker_ptr->m_conditional_lock.notify_all();	/* Clear all queues to avoid stuck tasks when joining a thread */
         worker_ptr->stop();
     }
 }

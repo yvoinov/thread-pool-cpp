@@ -84,7 +84,6 @@ public:
     static std::condition_variable m_conditional_lock_post;
     static std::mutex m_conditional_mutex_post;
 
-    std::condition_variable m_conditional_lock;
 private:
     /**
      * @brief tryGetLocalTask Get one task from this worker queue.
@@ -111,6 +110,7 @@ private:
     std::thread m_thread;
     std::size_t m_next_donor;
     std::mutex m_conditional_mutex;
+    std::condition_variable m_conditional_lock;
 };
 
 /* Avoid linking error 'Undefined first referenced symbol' */
@@ -151,6 +151,7 @@ inline void Worker<Task, Queue>::stop()
 {
     m_running_flag.store(false, std::memory_order_release);
     m_ready.store(true, std::memory_order_release);
+    m_conditional_lock.notify_all();
     m_thread.join();
 }
 
