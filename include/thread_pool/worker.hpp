@@ -149,9 +149,9 @@ inline Worker<Task, Queue>::Worker(std::size_t queue_size)
 template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
-    m_running_flag.store(false, std::memory_order_release);
     m_ready.store(true, std::memory_order_release);
     m_conditional_lock.notify_all();
+    m_running_flag.store(false, std::memory_order_release);
     m_thread.join();
 }
 
