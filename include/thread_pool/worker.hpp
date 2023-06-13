@@ -11,7 +11,7 @@ namespace tp
 {
 
 #if defined IDLE_CNT
-static std::atomic<std::size_t> v_idle_cnt { 0 };
+static std::atomic<std::size_t> g_idle_cnt { 0 };
 #endif
 
 /**
@@ -233,11 +233,11 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             std::unique_lock<std::mutex> lock(m_conditional_mutex);
             if (m_ready.exchange(false, std::memory_order_relaxed)) continue;// If post() occurs here, don't sleep
             #if defined IDLE_CNT
-            v_idle_cnt.fetch_add(1, std::memory_order_relaxed);
+            g_idle_cnt.fetch_add(1, std::memory_order_relaxed);
             #endif
             m_conditional_lock.wait(lock, [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
             #if defined IDLE_CNT
-            v_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
+            g_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
             #endif
         }
     }
