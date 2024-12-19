@@ -38,6 +38,7 @@
 
 #include <atomic>
 #include <type_traits>
+#include <array>
 #include <vector>
 #include <stdexcept>
 
@@ -88,7 +89,7 @@ public:
     * @brief MPMCBoundedQueue destructor.
     */
     ~MPMCBoundedQueue() = default;
- 
+
    /**
     * @brief push Push data to queue.
     * @param data Data to be pushed.
@@ -130,7 +131,7 @@ private:
     };
 
 private:
-    typedef char Cacheline[64];
+    using Cacheline = std::array<char, 64>;
 
     Cacheline pad0;
     std::vector<Cell> m_buffer;
