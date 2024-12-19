@@ -3,6 +3,16 @@
 #define DELEGATE_ARGS_SIZE 128
 #include "delegate.hpp"		/* Fixed function incompatible with SUNPRO */
 
+/* Worker wait interval in milliseconds for periodically check queue */
+#ifndef WORKER_WAIT_INTERVAL
+#define WORKER_WAIT_INTERVAL 1000
+#endif
+
+/* Wait interval for entry point when queues is full */
+#ifndef POST_WAIT_INTERVAL
+#define POST_WAIT_INTERVAL 1
+#endif
+
 #include "mpmc_bounded_queue.hpp"
 #include "thread_pool_options.hpp"
 #include "worker.hpp"
@@ -207,7 +217,7 @@ inline void ThreadPoolImpl<Task, Queue>::post(Handler&& handler) noexcept
 	}
         std::unique_lock<std::mutex> lock(Worker<Task, Queue>::m_conditional_mutex_post);
         Worker<Task, Queue>::m_fill_up.store(true, std::memory_order_relaxed);
-        Worker<Task, Queue>::m_conditional_lock_post.wait_for(lock, std::chrono::microseconds(1),
+        Worker<Task, Queue>::m_conditional_lock_post.wait_for(lock, std::chrono::microseconds(POST_WAIT_INTERVAL),
                                                               []() { return Worker<Task, Queue>::m_fill.exchange(false, std::memory_order_relaxed); });
     }
 }
