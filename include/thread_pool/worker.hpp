@@ -234,7 +234,7 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             #if defined IDLE_CNT
             g_idle_cnt.fetch_add(1, std::memory_order_relaxed);
             #endif
-            m_conditional_lock.wait_for(lock, std::chrono::milliseconds(1000), [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
+            m_conditional_lock.wait_for(lock, std::chrono::milliseconds(WORKER_WAIT_INTERVAL), [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
             #if defined IDLE_CNT
             g_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
             #endif
