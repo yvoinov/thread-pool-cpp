@@ -147,7 +147,7 @@ private:
 /// Implementation
 
 template <typename T>
-inline MPMCBoundedQueue<T>::MPMCBoundedQueue(std::size_t size)
+inline MPMCBoundedQueue<T>::MPMCBoundedQueue(std::size_t size)//-V730
     : m_buffer(size), m_buffer_mask(size - 1), m_enqueue_pos(0),
       m_dequeue_pos(0)
 {
