@@ -193,10 +193,12 @@ inline bool Worker<Task, Queue>::tryRoundRobinSteal(Task& task, WorkerVector& wo
         {
             // Increment before returning so that m_next_donor always points to the worker that has gone the longest
             // without a steal attempt. This helps enforce fairness in the stealing.
-            ++m_next_donor %= workers.size();
+            ++m_next_donor;
+            m_next_donor %= workers.size();
             return true;
         }
-        ++m_next_donor %= workers.size();
+	++m_next_donor;
+        m_next_donor %= workers.size();
     } while (m_next_donor != starting_index);
     return false;
 }
