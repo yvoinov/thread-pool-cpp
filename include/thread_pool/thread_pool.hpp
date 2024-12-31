@@ -3,11 +3,6 @@
 #define DELEGATE_ARGS_SIZE 128
 #include "delegate.hpp"		/* Fixed function incompatible with SUNPRO */
 
-/* Worker wait interval in milliseconds for periodically check queue */
-#ifndef WORKER_WAIT_INTERVAL
-#define WORKER_WAIT_INTERVAL 1000
-#endif
-
 /* Wait interval for entry point when queues is full */
 #ifndef POST_WAIT_INTERVAL
 #define POST_WAIT_INTERVAL 1
