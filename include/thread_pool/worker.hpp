@@ -149,8 +149,11 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
     m_running_flag.store(false, std::memory_order_release);
-    m_ready.store(true, std::memory_order_release);
-    m_conditional_lock.notify_one();
+    {
+        std::unique_lock<std::mutex> lock(m_conditional_mutex);
+        m_ready.store(true, std::memory_order_relaxed);
+        m_conditional_lock.notify_one();
+    }
     m_thread.join();
 }
 
@@ -170,7 +173,8 @@ template <typename Task, template<typename> class Queue>
 template <typename Handler>
 inline bool Worker<Task, Queue>::tryPost(Handler&& handler)
 {
-    m_ready.store(true, std::memory_order_release);
+    std::unique_lock<std::mutex> lock(m_conditional_mutex);
+    m_ready.store(true, std::memory_order_relaxed);
     m_conditional_lock.notify_one();
     return m_queue.push(std::forward<Handler>(handler));
 }
@@ -225,7 +229,8 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             }
             if (m_fill_up.exchange(false, std::memory_order_acquire))
             {
-                m_fill.store(true, std::memory_order_release);
+                std::unique_lock<std::mutex> lock(m_conditional_mutex_post);
+                m_fill.store(true, std::memory_order_relaxed);
                 m_conditional_lock_post.notify_one();
             }
         }
@@ -236,7 +241,7 @@ inline void Worker<Task, Queue>::threadFunc(WorkerVector& workers) noexcept
             #if defined IDLE_CNT
             g_idle_cnt.fetch_add(1, std::memory_order_relaxed);
             #endif
-            m_conditional_lock.wait_for(lock, std::chrono::milliseconds(WORKER_WAIT_INTERVAL), [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
+            m_conditional_lock.wait(lock, [this]() { return m_ready.exchange(false, std::memory_order_relaxed); });
             #if defined IDLE_CNT
             g_idle_cnt.fetch_sub(1, std::memory_order_relaxed);
             #endif
