@@ -38,9 +38,10 @@
 
 #include <atomic>
 #include <type_traits>
-#include <array>
 #include <vector>
 #include <stdexcept>
+
+#define CACHE_LINE_SIZE 64
 
 namespace tp
 {
@@ -131,16 +132,10 @@ private:
     };
 
 private:
-    using Cacheline = std::array<char, 64>;
-
-    Cacheline pad0;
-    std::vector<Cell> m_buffer;
+    alignas(CACHE_LINE_SIZE) std::vector<Cell> m_buffer;
     /* const */ std::size_t m_buffer_mask;
-    Cacheline pad1;
-    std::atomic<std::size_t> m_enqueue_pos;
-    Cacheline pad2;
-    std::atomic<std::size_t> m_dequeue_pos;
-    Cacheline pad3;
+    alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> m_enqueue_pos;
+    alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> m_dequeue_pos;
 };
 
 
