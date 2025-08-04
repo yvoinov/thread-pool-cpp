@@ -41,7 +41,9 @@
 #include <vector>
 #include <stdexcept>
 
+#ifndef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE 64
+#endif
 
 namespace tp
 {
@@ -53,6 +55,7 @@ namespace tp
  * Inspired by Dmitry Vyukov's mpmc queue.
  * http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
  */
+
 template <typename T>
 class MPMCBoundedQueue
 {
@@ -107,7 +110,7 @@ public:
     bool pop(T& data);
 
 private:
-    struct Cell
+    struct alignas(CACHE_LINE_SIZE) Cell
     {
         std::atomic<std::size_t> sequence;
         T data;
